@@ -81,7 +81,7 @@ func main() {
 // CreatePerson will handle the create person post request
 func CreatePerson(c *gin.Context) {
 	var person Person
-	err := c.Bind(&person)
+	err := c.BindJSON(&person)
 	if err != nil {
 		log.Fatalf("Error while unmarshal json: %v", err)
 	}
@@ -147,7 +147,7 @@ func GetPerson(c *gin.Context) {
 // UpdatePerson will handle the person update endpoint
 func UpdatePerson(c *gin.Context) {
 	person := new(Person)
-	if err := c.Bind(&person); err != nil {
+	if err := c.BindJSON(&person); err != nil {
 		log.Fatalf("Error while unmarshal json: %v", err)
 	}
 	stringID := c.Param("id")
