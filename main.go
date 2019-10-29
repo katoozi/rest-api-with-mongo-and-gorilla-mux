@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,6 +44,9 @@ func createIndexModels() mongo.IndexModel {
 }
 
 func main() {
+	// change log package flags
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// read environment variables
 	user := os.Getenv("mongo_user")
 	password := os.Getenv("mongo_password")
@@ -68,47 +70,34 @@ func main() {
 		log.Fatalf("Error while creating indexs: %v", err)
 	}
 
-	router := mux.NewRouter()
-	router.HandleFunc("/person", CreatePerson).Methods("POST")
-	router.HandleFunc("/person/{id}", UpdatePerson).Methods("PATCH")
-	router.HandleFunc("/person/{id}", UpdatePerson).Methods("PUT")
-	router.HandleFunc("/person", GetPersons).Methods("GET").Queries("page", "{page}")
-	router.HandleFunc("/person", GetPersons).Methods("GET")
-	router.HandleFunc("/person/{id}", GetPerson).Methods("GET")
+	router := echo.New()
+	router.POST("/person", CreatePerson)
+	router.PATCH("/person/:id", UpdatePerson)
+	router.PUT("/person/:id", UpdatePerson)
+	router.GET("/person", GetPersons)
+	router.GET("/person/:id", GetPerson)
 
 	fmt.Println("Server is listening...")
-	http.ListenAndServe(":1234", router)
+	router.Logger.Fatal(router.Start(":1234"))
 }
 
 // CreatePerson will handle the create person post request
-func CreatePerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
+func CreatePerson(c echo.Context) error {
 	var person Person
-	json.NewDecoder(req.Body).Decode(&person)
+	if err := c.Bind(&person); err != nil {
+		return err
+	}
 	result, err := people.InsertOne(nil, person)
 	if err != nil {
 		log.Printf("Error while insert document: %v, type: %T", err, err)
-		switch err.(type) {
-		case mongo.WriteException:
-			res.WriteHeader(http.StatusNotAcceptable)
-			json.NewEncoder(res).Encode(map[string]string{"status": "Error while inserting data."})
-		case mongo.CommandError:
-			res.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(res).Encode(map[string]string{"status": "Error while inserting data."})
-		default:
-			log.Printf("Unhandled Error: %v", err)
-		}
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "Error while inserting data."})
 	}
-	res.WriteHeader(http.StatusCreated)
-	json.NewEncoder(res).Encode(result)
+	return c.JSON(http.StatusCreated, result)
 }
 
 // GetPersons will handle people list get request
-func GetPersons(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
-	var personList []Person
-	pageString := req.FormValue("page")
+func GetPersons(c echo.Context) error {
+	pageString := c.QueryParam("page")
 	page, err := strconv.ParseInt(pageString, 10, 64)
 	if err != nil {
 		page = 0
@@ -122,10 +111,9 @@ func GetPersons(res http.ResponseWriter, req *http.Request) {
 	curser, err := people.Find(nil, bson.M{}, &findOptions)
 	if err != nil {
 		log.Printf("Error while quering collection: %v\n", err)
-		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte(`{"message": "Error while quereing database."}`))
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error while quereing database."})
 	}
+	var personList []Person
 	defer curser.Close(context.Background())
 	for curser.Next(context.Background()) {
 		var person Person
@@ -134,16 +122,15 @@ func GetPersons(res http.ResponseWriter, req *http.Request) {
 	}
 	if err := curser.Err(); err != nil {
 		log.Fatalf("Error in curser: %v", err)
-		res.WriteHeader(http.StatusInternalServerError)
+		return c.JSON(http.StatusInternalServerError, map[string]string{})
 	}
-	json.NewEncoder(res).Encode(personList)
+	return c.JSON(http.StatusOK, personList)
 }
 
 // GetPerson will give us person with special id
-func GetPerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
-	var params = mux.Vars(req)
-	id, err := primitive.ObjectIDFromHex(params["id"])
+func GetPerson(c echo.Context) error {
+	strignID := c.Param("id")
+	id, err := primitive.ObjectIDFromHex(strignID)
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
 	}
@@ -151,18 +138,19 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 	err = people.FindOne(nil, Person{ID: id}).Decode(&person)
 	if err != nil {
 		log.Printf("Error while decode to go struct:%v\n", err)
-		res.WriteHeader(http.StatusInternalServerError)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "internal error"})
 	}
-	json.NewEncoder(res).Encode(person)
+	return c.JSON(http.StatusOK, person)
 }
 
 // UpdatePerson will handle the person update endpoint
-func UpdatePerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
-	person := new(Person)
-	json.NewDecoder(req.Body).Decode(person)
-	var params = mux.Vars(req)
-	oid, err := primitive.ObjectIDFromHex(params["id"])
+func UpdatePerson(c echo.Context) error {
+	var person Person
+	if err := c.Bind(&person); err != nil {
+		return err
+	}
+	id := c.Param("id")
+	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
 	}
@@ -173,6 +161,5 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Error while updateing document: %v", err)
 	}
-	res.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(res).Encode(result)
+	return c.JSON(http.StatusAccepted, result)
 }
