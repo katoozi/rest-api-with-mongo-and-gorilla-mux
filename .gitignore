@@ -15,3 +15,5 @@
 # vendor/
 nap/cmd/nap/nap
 .vscode/
+
+.env
