@@ -152,7 +152,7 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
 		res.WriteHeader(http.StatusBadRequest)
-		httpResponse := response(http.StatusBadRequest, "id that you sent in wrong!!!", nil)
+		httpResponse := response(http.StatusBadRequest, "id that you sent is wrong!!!", nil)
 		json.NewEncoder(res).Encode(httpResponse)
 		return
 	}
@@ -180,7 +180,7 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
 		res.WriteHeader(http.StatusBadRequest)
-		httpResponse := response(http.StatusBadRequest, "id that you sent in wrong!!!", nil)
+		httpResponse := response(http.StatusBadRequest, "id that you sent is wrong!!!", nil)
 		json.NewEncoder(res).Encode(httpResponse)
 		return
 	}
