@@ -30,6 +30,9 @@ type Person struct {
 
 var people *mongo.Collection
 
+// results count per page
+var limit int64 = 10
+
 func createIndexModels() mongo.IndexModel {
 	keys := bsonx.Doc{
 		{Key: "username", Value: bsonx.Int32(1)},
@@ -87,21 +90,23 @@ func CreatePerson(res http.ResponseWriter, req *http.Request) {
 	json.NewDecoder(req.Body).Decode(&person)
 	result, err := people.InsertOne(nil, person)
 	if err != nil {
-		log.Printf("Error while insert document: %v, type: %T", err, err)
+		log.Printf("Error while insert document: %v, type: %T\n", err, err)
 		switch err.(type) {
 		case mongo.WriteException:
 			res.WriteHeader(http.StatusNotAcceptable)
-			json.NewEncoder(res).Encode(map[string]string{"status": "Error while inserting data."})
-		case mongo.CommandError:
-			res.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(res).Encode(map[string]string{"status": "Error while inserting data."})
+			httpResponse := response(http.StatusNotAcceptable, "Error while inserting data.", nil)
+			json.NewEncoder(res).Encode(httpResponse)
 		default:
-			log.Printf("Unhandled Error: %v", err)
+			res.WriteHeader(http.StatusInternalServerError)
+			httpResponse := response(http.StatusInternalServerError, "Error while inserting data.", nil)
+			json.NewEncoder(res).Encode(httpResponse)
 		}
 		return
 	}
 	res.WriteHeader(http.StatusCreated)
-	json.NewEncoder(res).Encode(result)
+	person.ID = result.InsertedID.(primitive.ObjectID)
+	httpResponse := response(http.StatusCreated, "", person)
+	json.NewEncoder(res).Encode(httpResponse)
 }
 
 // GetPersons will handle people list get request
@@ -113,30 +118,32 @@ func GetPersons(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		page = 0
 	}
-	limit := int64(10)
 	page = page * limit
 	findOptions := options.FindOptions{
 		Skip:  &page,
 		Limit: &limit,
+		Sort: bson.M{
+			"_id": -1, // -1 for descending and 1 for ascending
+		},
 	}
 	curser, err := people.Find(nil, bson.M{}, &findOptions)
 	if err != nil {
 		log.Printf("Error while quering collection: %v\n", err)
 		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte(`{"message": "Error while quereing database."}`))
+		httpResponse := response(http.StatusInternalServerError, "Error happend while reading data", nil)
+		json.NewEncoder(res).Encode(httpResponse)
 		return
 	}
-	defer curser.Close(context.Background())
-	for curser.Next(context.Background()) {
-		var person Person
-		curser.Decode(&person)
-		personList = append(personList, person)
-	}
-	if err := curser.Err(); err != nil {
+	err = curser.All(context.Background(), &personList)
+	if err != nil {
 		log.Fatalf("Error in curser: %v", err)
 		res.WriteHeader(http.StatusInternalServerError)
+		httpResponse := response(http.StatusInternalServerError, "Error happend while reading data", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
 	}
-	json.NewEncoder(res).Encode(personList)
+	httpResponse := response(http.StatusOK, "", personList)
+	json.NewEncoder(res).Encode(httpResponse)
 }
 
 // GetPerson will give us person with special id
@@ -146,25 +153,39 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 	id, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
+		res.WriteHeader(http.StatusBadRequest)
+		httpResponse := response(http.StatusBadRequest, "id that you sent in wrong!!!", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
 	}
 	var person Person
 	err = people.FindOne(nil, Person{ID: id}).Decode(&person)
 	if err != nil {
 		log.Printf("Error while decode to go struct:%v\n", err)
 		res.WriteHeader(http.StatusInternalServerError)
+		httpResponse := response(http.StatusInternalServerError, "there is an error on server!!!", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
 	}
-	json.NewEncoder(res).Encode(person)
+	res.WriteHeader(http.StatusOK)
+	httpResponse := response(http.StatusOK, "", person)
+	json.NewEncoder(res).Encode(httpResponse)
 }
 
 // UpdatePerson will handle the person update endpoint
 func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add("content-type", "application/json")
-	person := new(Person)
-	json.NewDecoder(req.Body).Decode(person)
+	var person Person
+	json.NewDecoder(req.Body).Decode(&person)
+	// we dont handle the json decode return error because all our fields have the omitempty tag.
 	var params = mux.Vars(req)
 	oid, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
 		log.Printf("Error while decode from hex: %v", err)
+		res.WriteHeader(http.StatusBadRequest)
+		httpResponse := response(http.StatusBadRequest, "id that you sent in wrong!!!", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
 	}
 	update := bson.M{
 		"$set": person,
@@ -172,7 +193,12 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 	result, err := people.UpdateOne(context.Background(), Person{ID: oid}, update)
 	if err != nil {
 		log.Printf("Error while updateing document: %v", err)
+		res.WriteHeader(http.StatusInternalServerError)
+		httpResponse := response(http.StatusInternalServerError, "error in updating document!!!", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
 	}
 	res.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(res).Encode(result)
+	httpResponse := response(http.StatusAccepted, "", result)
+	json.NewEncoder(res).Encode(httpResponse)
 }
