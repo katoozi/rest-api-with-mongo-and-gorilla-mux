@@ -72,6 +72,7 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+	router.Use(JSONContentTypeMiddleware)
 	router.HandleFunc("/person", CreatePerson).Methods("POST")
 	router.HandleFunc("/person/{id}", UpdatePerson).Methods("PATCH")
 	router.HandleFunc("/person/{id}", UpdatePerson).Methods("PUT")
@@ -85,7 +86,6 @@ func main() {
 
 // CreatePerson will handle the create person post request
 func CreatePerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
 	var person Person
 	json.NewDecoder(req.Body).Decode(&person)
 	result, err := people.InsertOne(nil, person)
@@ -111,7 +111,6 @@ func CreatePerson(res http.ResponseWriter, req *http.Request) {
 
 // GetPersons will handle people list get request
 func GetPersons(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
 	var personList []Person
 	pageString := req.FormValue("page")
 	page, err := strconv.ParseInt(pageString, 10, 64)
@@ -148,7 +147,6 @@ func GetPersons(res http.ResponseWriter, req *http.Request) {
 
 // GetPerson will give us person with special id
 func GetPerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
 	var params = mux.Vars(req)
 	id, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
@@ -174,7 +172,6 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 
 // UpdatePerson will handle the person update endpoint
 func UpdatePerson(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("content-type", "application/json")
 	var person Person
 	json.NewDecoder(req.Body).Decode(&person)
 	// we dont handle the json decode return error because all our fields have the omitempty tag.
