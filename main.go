@@ -159,6 +159,12 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 	var person Person
 	err = people.FindOne(nil, Person{ID: id}).Decode(&person)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			res.WriteHeader(http.StatusNotFound)
+			httpResponse := response(http.StatusNotFound, "person not found", nil)
+			json.NewEncoder(res).Encode(httpResponse)
+			return
+		}
 		log.Printf("Error while decode to go struct:%v\n", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		httpResponse := response(http.StatusInternalServerError, "there is an error on server!!!", nil)

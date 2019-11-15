@@ -14,6 +14,7 @@
         "operationId": "create-person",
         "summary": "Create Person",
         "produces": ["application/json"],
+        "tags": ["Person Api"],
         "parameters": [
           {
             "name": "body",
@@ -64,6 +65,146 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "list-person",
+        "summary": "List of Persons",
+        "produces": ["application/json"],
+        "tags": ["Person Api"],
+        "responses": {
+          "200": {
+            "description": "200 list of persons",
+            "examples": {
+              "application/json": "{\n \"status\": 201,\n \"message\": \"\",\n \"content\": \n\t [\n\t\t{\n \t\t\"_id\": \"5dceb75c625f79894eb82a4f\",\n\t\t \"username\": \"mohammadkatoozi\",\n\t\t \"email\": \"k2527806@gmail.com\"\n\t\t},\t\n\t\t{\n \t\t\"_id\": \"5dceb75c625f79894eb82a4f\",\n\t\t \"username\": \"mohammadkatoozi\",\n\t\t \"email\": \"k2527806@gmail.com\"\n\t\t}\n\t]\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Person"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/{id}": {
+      "get": {
+        "operationId": "get-person",
+        "summary": "Get Person",
+        "produces": ["application/json"],
+        "tags": ["Person Api"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "person id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "person exists",
+            "examples": {
+              "application/json": "{\n \"status\": 200,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "$ref": "#/definitions/Person"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "update-person",
+        "summary": "Update Person",
+        "produces": ["application/json"],
+        "tags": ["Person Api"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "person id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "person updated",
+            "examples": {
+              "application/json": "{\n \"status\": 200,\n \"message\": \"\",\n \"content\": {\n\t \"MatchedCount\": 1,\n\t \"ModifiedCount\": 1,\n\t \"UpsertedCount\": 0,\n\t \"UpsertedID\": null\n\t}\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "$ref": "#/definitions/PutAndPatch"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch-person",
+        "summary": "Update Person",
+        "produces": ["application/json"],
+        "tags": ["Person Api"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "person id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "person updated",
+            "examples": {
+              "application/json": "{\n \"status\": 200,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "$ref": "#/definitions/PutAndPatch"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -106,6 +247,22 @@
           "type": "string"
         },
         "content": {
+          "type": "object"
+        }
+      }
+    },
+    "PutAndPatch": {
+      "properties": {
+        "MatchedCount": {
+          "type": "integer"
+        },
+        "ModifiedCount":  {
+          "type": "integer"
+        },
+        "UpsertedCount":  {
+          "type": "integer"
+        },
+        "UpsertedID":  {
           "type": "object"
         }
       }
