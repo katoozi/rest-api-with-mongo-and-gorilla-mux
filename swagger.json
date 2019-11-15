@@ -1,0 +1,156 @@
+{
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "schemes": ["http", "https"],
+  "swagger": "2.0",
+  "info": {
+    "description": "simple restapi with golang in backend and mongodb as db.",
+    "title": "Golang RestApi With MongoDB",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/person": {
+      "post": {
+        "operationId": "create-person",
+        "summary": "Create Person",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "json",
+            "description": "person username. must be unique",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "json",
+            "description": "person email. must be unique",
+            "required": true,
+            "type": "string",
+            "format": "something@something.com"
+          },
+          {
+            "name": "first_name",
+            "in": "json",
+            "required": false,
+            "type": "string",
+            "format": "string"
+          },
+          {
+            "name": "last_name",
+            "in": "json",
+            "required": false,
+            "type": "string",
+            "format": "string"
+          },
+          {
+            "name": "data",
+            "in": "json",
+            "required": false,
+            "description": "data is a placeholder for saving more data about person. any data can be passin in key, value format.",
+            "type": "object",
+            "format": "object"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/Person"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "201 create person is successful",
+            "examples": {
+              "application/json": "{\n \"status\": 201,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
+            },
+            "schema": {
+              "$ref": "#/definitions/SinglePersonResponse"
+            }
+          },
+          "406": {
+            "description": "406 not acceptable(username or email already exists)",
+            "examples": {
+              "application/json": "{\n \"status\": 406,\n \"message\": \"Error while inserting data.\",\n \"content\": null \n}"
+            },
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "500 server internal error",
+            "examples": {
+              "application/json": "{\n \"status\": 500,\n \"message\": \"Error while inserting data.\",\n \"content\": null \n}"
+            },
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "SinglePersonResponse": {
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "content": {
+          "$ref": "#/definitions/Person"
+        }
+      }
+    },
+    "Person": {
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "Unique identifier representing a specific person."
+        },
+        "username": {
+          "type": "string",
+          "description": "person username. must be unique",
+          "required": true
+        },
+        "email": {
+          "type": "string",
+          "description": "person email. must be unique",
+          "required": true
+        },
+        "first_name": {
+          "type": "string",
+          "description": "person first name"
+        },
+        "last_name": {
+          "type": "string",
+          "description": "person last name"
+        },
+        "data": {
+          "type": "object",
+          "description": "data is a placeholder for saving more data about person. any data can be passin in key, value format",
+        }
+      }
+    },
+    "Error": {
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "content": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
