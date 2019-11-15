@@ -9,10 +9,10 @@ type (
 	}
 	// PaginatedResponse is the paginated response json schema
 	PaginatedResponse struct {
-		Count    int                    `json:"count"`
-		Next     string                 `json:"next"`
-		Previous string                 `json:"previous"`
-		Results  map[string]interface{} `json:"results"`
+		Count    int         `json:"count"`
+		Next     string      `json:"next"`
+		Previous string      `json:"previous"`
+		Results  interface{} `json:"results"`
 	}
 )
 
