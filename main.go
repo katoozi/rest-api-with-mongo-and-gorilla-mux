@@ -201,7 +201,14 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 		json.NewEncoder(res).Encode(httpResponse)
 		return
 	}
-	res.WriteHeader(http.StatusAccepted)
-	httpResponse := response(http.StatusAccepted, "", result)
-	json.NewEncoder(res).Encode(httpResponse)
+	if result.MatchedCount == 1 {
+		person.ID = oid
+		res.WriteHeader(http.StatusAccepted)
+		httpResponse := response(http.StatusAccepted, "", person)
+		json.NewEncoder(res).Encode(httpResponse)
+	} else {
+		res.WriteHeader(http.StatusNotFound)
+		httpResponse := response(http.StatusNotFound, "person not found", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+	}
 }

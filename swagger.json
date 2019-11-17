@@ -20,7 +20,7 @@
             "name": "body",
             "in": "body",
             "description": "http request body must be a json format",
-            "required": false,
+            "required": true,
             "schema": {
               "$ref": "#/definitions/Person"
             }
@@ -146,13 +146,22 @@
             "description": "person id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "http request body must be a json format",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Person"
+            }
           }
         ],
         "responses": {
           "202": {
             "description": "person updated",
             "examples": {
-              "application/json": "{\n \"status\": 200,\n \"message\": \"\",\n \"content\": {\n\t \"MatchedCount\": 1,\n\t \"ModifiedCount\": 1,\n\t \"UpsertedCount\": 0,\n\t \"UpsertedID\": null\n\t}\n}"
+              "application/json": "{\n \"status\": 202,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
             },
             "schema": {
               "properties": {
@@ -163,7 +172,26 @@
                   "type": "string"
                 },
                 "content": {
-                  "$ref": "#/definitions/PutAndPatch"
+                  "$ref": "#/definitions/Person"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "person not found",
+            "examples": {
+              "application/json": "{\n \"status\": 404,\n \"message\": \"person not found\",\n \"content\": null\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "$ref": "#/definitions/Person"
                 }
               }
             }
@@ -182,13 +210,22 @@
             "description": "person id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "http request body must be a json format",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Person"
+            }
           }
         ],
         "responses": {
           "202": {
             "description": "person updated",
             "examples": {
-              "application/json": "{\n \"status\": 200,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
+              "application/json": "{\n \"status\": 202,\n \"message\": \"\",\n \"content\": {\n\t \"_id\": \"5dceb75c625f79894eb82a4f\",\n\t \"username\": \"mohammadkatoozi\",\n\t \"email\": \"k2527806@gmail.com\"\n\t}\n}"
             },
             "schema": {
               "properties": {
@@ -199,7 +236,26 @@
                   "type": "string"
                 },
                 "content": {
-                  "$ref": "#/definitions/PutAndPatch"
+                  "$ref": "#/definitions/Person"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "person not found",
+            "examples": {
+              "application/json": "{\n \"status\": 404,\n \"message\": \"person not found\",\n \"content\": null\n}"
+            },
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "content": {
+                  "$ref": "#/definitions/Person"
                 }
               }
             }
@@ -214,27 +270,35 @@
       "properties": {
         "_id": {
           "type": "string",
-          "description": "Unique identifier representing a specific person."
+          "description": "Unique identifier representing a specific person.",
+          "example": "5dcd702258d90272b062efba"
         },
         "username": {
           "type": "string",
-          "description": "person username. must be unique"
+          "description": "person username. must be unique",
+          "example": "john_doe"
         },
         "email": {
           "type": "string",
-          "description": "person email. must be unique"
+          "description": "person email. must be unique",
+          "example": "john_doe@gmail.com"
         },
         "first_name": {
           "type": "string",
-          "description": "person first name"
+          "description": "person first name",
+          "example": "John"
         },
         "last_name": {
           "type": "string",
-          "description": "person last name"
+          "description": "person last name",
+          "example": "Doe"
         },
         "data": {
           "type": "object",
-          "description": "data is a placeholder for saving more data about person. any data can be passin in key, value format"
+          "description": "data is a placeholder for saving more data about person. any data can be passin in with key:value format",
+          "example": {
+            "age": "21"
+          }
         }
       }
     },
@@ -247,22 +311,6 @@
           "type": "string"
         },
         "content": {
-          "type": "object"
-        }
-      }
-    },
-    "PutAndPatch": {
-      "properties": {
-        "MatchedCount": {
-          "type": "integer"
-        },
-        "ModifiedCount":  {
-          "type": "integer"
-        },
-        "UpsertedCount":  {
-          "type": "integer"
-        },
-        "UpsertedID":  {
           "type": "object"
         }
       }
