@@ -168,8 +168,14 @@ func GetPerson(res http.ResponseWriter, req *http.Request) {
 
 // UpdatePerson will handle the person update endpoint
 func UpdatePerson(res http.ResponseWriter, req *http.Request) {
-	var person Person
-	json.NewDecoder(req.Body).Decode(&person)
+	var updateData map[string]interface{}
+	err := json.NewDecoder(req.Body).Decode(&updateData)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		httpResponse := response(http.StatusBadRequest, "json body is incorrect", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
+	}
 	// we dont handle the json decode return error because all our fields have the omitempty tag.
 	var params = mux.Vars(req)
 	oid, err := primitive.ObjectIDFromHex(params["id"])
@@ -181,7 +187,7 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	update := bson.M{
-		"$set": person,
+		"$set": updateData,
 	}
 	result, err := people.UpdateOne(context.Background(), Person{ID: oid}, update)
 	if err != nil {
@@ -192,9 +198,8 @@ func UpdatePerson(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if result.MatchedCount == 1 {
-		person.ID = oid
 		res.WriteHeader(http.StatusAccepted)
-		httpResponse := response(http.StatusAccepted, "", person)
+		httpResponse := response(http.StatusAccepted, "", &updateData)
 		json.NewEncoder(res).Encode(httpResponse)
 	} else {
 		res.WriteHeader(http.StatusNotFound)
