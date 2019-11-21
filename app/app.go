@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -74,8 +77,18 @@ func (app *App) Delete(path string, endpoint http.HandlerFunc) {
 
 // Run will start the http server on host that you pass in. host:<ip:port>
 func (app *App) Run(host string) {
+	// use signals for shutdown server gracefully.
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt, os.Kill)
+	go func() {
+		log.Fatal(http.ListenAndServe(host, app.Router))
+	}()
 	log.Printf("Server is listning...")
-	log.Fatal(http.ListenAndServe(host, app.Router))
+	sig := <-sigs
+	log.Println("Signal: ", sig)
+
+	log.Println("Stoping MongoDB Connection...")
+	app.DB.Client().Disconnect(context.Background())
 }
 
 // RequestHandlerFunction is a custome type that help us to pass db arg to all endpoints
