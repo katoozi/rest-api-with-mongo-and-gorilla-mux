@@ -19,6 +19,7 @@ import (
 
 // App has the mongo database and router instances
 type App struct {
+	Host   string
 	Router *mux.Router
 	DB     *mongo.Database
 }
@@ -37,6 +38,7 @@ func (app *App) Initialize(config *config.Config) {
 
 	app.Router = mux.NewRouter()
 	app.Router.Use(handler.JSONContentTypeMiddleware)
+	app.Host = config.ServerHost
 	app.setRouters()
 }
 
@@ -56,23 +58,23 @@ func (app *App) Get(path string, endpoint http.HandlerFunc, queries ...string) {
 }
 
 // Post will register Post method for an endpoint
-func (app *App) Post(path string, endpoint http.HandlerFunc) {
-	app.Router.HandleFunc(path, endpoint).Methods("POST")
+func (app *App) Post(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("POST").Queries(queries...)
 }
 
 // Put will register Put method for an endpoint
-func (app *App) Put(path string, endpoint http.HandlerFunc) {
-	app.Router.HandleFunc(path, endpoint).Methods("PUT")
+func (app *App) Put(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("PUT").Queries(queries...)
 }
 
 // Patch will register Patch method for an endpoint
-func (app *App) Patch(path string, endpoint http.HandlerFunc) {
-	app.Router.HandleFunc(path, endpoint).Methods("PATCH")
+func (app *App) Patch(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("PATCH").Queries(queries...)
 }
 
 // Delete will register Delete method for an endpoint
-func (app *App) Delete(path string, endpoint http.HandlerFunc) {
-	app.Router.HandleFunc(path, endpoint).Methods("DELETE")
+func (app *App) Delete(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("DELETE").Queries(queries...)
 }
 
 // Run will start the http server on host that you pass in. host:<ip:port>
@@ -81,9 +83,9 @@ func (app *App) Run(host string) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt, os.Kill)
 	go func() {
-		log.Fatal(http.ListenAndServe(host, app.Router))
+		log.Fatal(http.ListenAndServe(app.Host, app.Router))
 	}()
-	log.Printf("Server is listning...")
+	log.Printf("Server is listning on %s\n", app.Host)
 	sig := <-sigs
 	log.Println("Signal: ", sig)
 
@@ -94,6 +96,7 @@ func (app *App) Run(host string) {
 // RequestHandlerFunction is a custome type that help us to pass db arg to all endpoints
 type RequestHandlerFunction func(db *mongo.Database, w http.ResponseWriter, r *http.Request)
 
+// handleRequest is a middleware we create for pass in db connection to endpoints.
 func (app *App) handleRequest(handler RequestHandlerFunction) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler(app.DB, w, r)
@@ -102,6 +105,7 @@ func (app *App) handleRequest(handler RequestHandlerFunction) http.HandlerFunc {
 
 // setIndexes will create unique and index fields.
 func (app *App) setIndexes() {
+	// username and email will be unique.
 	keys := bsonx.Doc{
 		{Key: "username", Value: bsonx.Int32(1)},
 		{Key: "email", Value: bsonx.Int32(1)},

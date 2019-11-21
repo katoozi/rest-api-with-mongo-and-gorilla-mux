@@ -9,6 +9,7 @@ type (
 	}
 
 	// PaginatedResponse is the paginated response json schema
+	// we not use it yet
 	PaginatedResponse struct {
 		Count    int         `json:"count"`
 		Next     string      `json:"next"`
@@ -17,7 +18,7 @@ type (
 	}
 )
 
-// NewResponse will create htpp response
+// NewResponse is the Response struct factory function.
 func NewResponse(status int, message string, content interface{}) *Response {
 	return &Response{
 		Status:  status,

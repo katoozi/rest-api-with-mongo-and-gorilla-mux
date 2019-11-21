@@ -9,5 +9,5 @@ type Person struct {
 	LastName  string                 `json:"last_name,omitempty" bson:"last_name,omitempty"`
 	Username  string                 `json:"username,omitempty" bson:"username,omitempty"`
 	Email     string                 `json:"email,omitempty" bson:"email,omitempty"`
-	Data      map[string]interface{} `json:"data,omitempty" bson:"data,omitempty"`
+	Data      map[string]interface{} `json:"data,omitempty" bson:"data,omitempty"` // data is a optional fields that can hold anything in key:value format.
 }

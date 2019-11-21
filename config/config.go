@@ -5,18 +5,20 @@ import (
 	"os"
 )
 
-// Config is the server configuration structure
+// Config is the server configuration structure.
+// all fields will be filled with environment variables.
 type Config struct {
-	// mongo
-	MongoUser     string
-	MongoPassword string
-	MongoHost     string
-	MongoPort     string
+	ServerHost    string // address that server will listening on
+	MongoUser     string // mongo db username
+	MongoPassword string // mongo db password
+	MongoHost     string // host that mongo db listening on
+	MongoPort     string // port that mongo db listening on
 }
 
-// Initialize will read env variables and save them in config structure
+// Initialize will read environment variables and save them in config structure fields
 func (config *Config) Initialize() {
 	// read environment variables
+	config.ServerHost = os.Getenv("server_host")
 	config.MongoUser = os.Getenv("mongo_user")
 	config.MongoPassword = os.Getenv("mongo_password")
 	config.MongoHost = os.Getenv("mongo_host")
