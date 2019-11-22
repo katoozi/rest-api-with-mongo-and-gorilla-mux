@@ -20,15 +20,20 @@ var limit int64 = 10
 
 // CreatePerson will handle the create person post request
 func CreatePerson(db *mongo.Database, res http.ResponseWriter, req *http.Request) {
-	var person model.Person
-	json.NewDecoder(req.Body).Decode(&person)
-	result, err := db.Collection("peopls").InsertOne(nil, person)
+	person := new(model.Person)
+	err := json.NewDecoder(req.Body).Decode(person)
 	if err != nil {
-		log.Printf("Error while insert document: %v, type: %T\n", err, err)
+		res.WriteHeader(http.StatusBadRequest)
+		httpResponse := model.NewResponse(http.StatusBadRequest, "body json request have issues!!!", nil)
+		json.NewEncoder(res).Encode(httpResponse)
+		return
+	}
+	result, err := db.Collection("people").InsertOne(nil, person)
+	if err != nil {
 		switch err.(type) {
 		case mongo.WriteException:
 			res.WriteHeader(http.StatusNotAcceptable)
-			httpResponse := model.NewResponse(http.StatusNotAcceptable, "Error while inserting data.", nil)
+			httpResponse := model.NewResponse(http.StatusNotAcceptable, "username or email already exists in database.", nil)
 			json.NewEncoder(res).Encode(httpResponse)
 		default:
 			res.WriteHeader(http.StatusInternalServerError)
