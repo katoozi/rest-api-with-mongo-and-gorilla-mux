@@ -26,3 +26,17 @@ func NewResponse(status int, message string, content interface{}) *Response {
 		Content: content,
 	}
 }
+
+// NewPaginatedResponse will created http paginated response
+func NewPaginatedResponse(status, count int, message, next, prev string, results interface{}) *Response {
+	return &Response{
+		Status:  status,
+		Message: message,
+		Content: &PaginatedResponse{
+			Count:    count,
+			Next:     next,
+			Previous: prev,
+			Results:  results,
+		},
+	}
+}
