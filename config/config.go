@@ -15,8 +15,8 @@ type Config struct {
 	MongoPort     string // port that mongo db listening on
 }
 
-// Initialize will read environment variables and save them in config structure fields
-func (config *Config) Initialize() {
+// initialize will read environment variables and save them in config structure fields
+func (config *Config) initialize() {
 	// read environment variables
 	config.ServerHost = os.Getenv("server_host")
 	config.MongoUser = os.Getenv("mongo_user")
@@ -38,6 +38,6 @@ func (config *Config) MongoURI() string {
 // NewConfig will create and initialize config struct
 func NewConfig() *Config {
 	config := new(Config)
-	config.Initialize()
+	config.initialize()
 	return config
 }
