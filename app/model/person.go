@@ -11,3 +11,14 @@ type Person struct {
 	Email     string                 `json:"email,omitempty" bson:"email,omitempty"`
 	Data      map[string]interface{} `json:"data,omitempty" bson:"data,omitempty"` // data is a optional fields that can hold anything in key:value format.
 }
+
+// NewPerson will return a Person{} instance, Person structure factory function
+func NewPerson(firstName, lastName, userName, email string, data map[string]interface{}) *Person {
+	return &Person{
+		Username:  userName,
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Data:      data,
+	}
+}

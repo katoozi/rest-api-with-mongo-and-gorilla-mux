@@ -37,7 +37,7 @@ func (config *Config) MongoURI() string {
 
 // NewConfig will create and initialize config struct
 func NewConfig() *Config {
-	config := Config{}
+	config := new(Config)
 	config.Initialize()
-	return &config
+	return config
 }
