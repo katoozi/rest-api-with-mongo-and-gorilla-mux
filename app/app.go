@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/katoozi/golang-mongodb-rest-api/app/db"
 	"github.com/katoozi/golang-mongodb-rest-api/app/handler"
 	"github.com/katoozi/golang-mongodb-rest-api/config"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
@@ -26,18 +25,11 @@ type App struct {
 
 // Initialize initialize the app with
 func (app *App) Initialize(config *config.Config) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI()))
-	if err != nil {
-		log.Fatalf("Error while connecting to mongo: %v\n", err)
-	}
-	app.DB = client.Database("golang")
-	app.setIndexes()
+	app.DB = db.InitialConnection("golang", config.MongoURI())
+	app.createIndexes()
 
 	app.Router = mux.NewRouter()
-	app.Router.Use(handler.JSONContentTypeMiddleware)
+	app.UseMiddleware(handler.JSONContentTypeMiddleware)
 	app.Host = config.ServerHost
 	app.setRouters()
 }
@@ -50,6 +42,22 @@ func (app *App) setRouters() {
 	app.Get("/person/{id}", app.handleRequest(handler.GetPerson))
 	app.Get("/person", app.handleRequest(handler.GetPersons))
 	app.Get("/person", app.handleRequest(handler.GetPersons), "page", "{page}")
+}
+
+// UseMiddleware will add global middleware in router
+func (app *App) UseMiddleware(middleware mux.MiddlewareFunc) {
+	app.Router.Use(middleware)
+}
+
+// createIndexes will create unique and index fields.
+func (app *App) createIndexes() {
+	// username and email will be unique.
+	keys := bsonx.Doc{
+		{Key: "username", Value: bsonx.Int32(1)},
+		{Key: "email", Value: bsonx.Int32(1)},
+	}
+	people := app.DB.Collection("people")
+	db.SetIndexes(people, keys)
 }
 
 // Get will register Get method for an endpoint
@@ -85,7 +93,7 @@ func (app *App) Run(host string) {
 	go func() {
 		log.Fatal(http.ListenAndServe(app.Host, app.Router))
 	}()
-	log.Printf("Server is listning on %s\n", app.Host)
+	log.Printf("Server is listning on http://%s\n", app.Host)
 	sig := <-sigs
 	log.Println("Signal: ", sig)
 
@@ -100,26 +108,5 @@ type RequestHandlerFunction func(db *mongo.Database, w http.ResponseWriter, r *h
 func (app *App) handleRequest(handler RequestHandlerFunction) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler(app.DB, w, r)
-	}
-}
-
-// setIndexes will create unique and index fields.
-func (app *App) setIndexes() {
-	// username and email will be unique.
-	keys := bsonx.Doc{
-		{Key: "username", Value: bsonx.Int32(1)},
-		{Key: "email", Value: bsonx.Int32(1)},
-	}
-	index := mongo.IndexModel{}
-	index.Keys = keys
-	unique := true
-	index.Options = &options.IndexOptions{
-		Unique: &unique,
-	}
-	people := app.DB.Collection("people")
-	opts := options.CreateIndexes().SetMaxTime(10 * time.Second)
-	_, err := people.Indexes().CreateOne(context.Background(), index, opts)
-	if err != nil {
-		log.Fatalf("Error while creating indexs: %v", err)
 	}
 }
