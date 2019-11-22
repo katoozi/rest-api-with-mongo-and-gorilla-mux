@@ -183,17 +183,7 @@
               "application/json": "{\n \"status\": 404,\n \"message\": \"person not found\",\n \"content\": null\n}"
             },
             "schema": {
-              "properties": {
-                "status": {
-                  "type": "integer"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "content": {
-                  "$ref": "#/definitions/Person"
-                }
-              }
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -247,17 +237,7 @@
               "application/json": "{\n \"status\": 404,\n \"message\": \"person not found\",\n \"content\": null\n}"
             },
             "schema": {
-              "properties": {
-                "status": {
-                  "type": "integer"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "content": {
-                  "$ref": "#/definitions/Person"
-                }
-              }
+              "$ref": "#/definitions/Error"
             }
           }
         }
