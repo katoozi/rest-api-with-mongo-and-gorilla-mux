@@ -10,7 +10,6 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	config := config.NewConfig()
-	app := app.App{}
-	app.Initialize(config)
+	app := app.NewApp(config)
 	app.Run(":1234")
 }

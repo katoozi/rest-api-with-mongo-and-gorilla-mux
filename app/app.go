@@ -23,6 +23,13 @@ type App struct {
 	DB     *mongo.Database
 }
 
+// NewApp will create and initialize App structure. App factory function.
+func NewApp(config *config.Config) *App {
+	app := new(App)
+	app.Initialize(config)
+	return app
+}
+
 // Initialize initialize the app with
 func (app *App) Initialize(config *config.Config) {
 	app.DB = db.InitialConnection("golang", config.MongoURI())
