@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,19 +24,22 @@ func handleRequest(db *mongo.Database, handler func(db *mongo.Database, w http.R
 	}
 }
 
+func createNewRequestNewRecorder(method, endpoint string, body io.Reader) (*http.Request, *httptest.ResponseRecorder) {
+	req, _ := http.NewRequest("POST", "/person", body)
+	rr := httptest.NewRecorder()
+	return req, rr
+}
+
 func TestCreatePerson(t *testing.T) {
 	configuration := config.NewConfig()
 	dbConnection := db.InitialConnection("test", configuration.MongoURI())
 
 	person, _ := json.Marshal(model.NewPerson("john", "doe", "john_doe", "john@gmail.com", nil))
 
-	// check http created status
-	req, err := http.NewRequest("POST", "/person", bytes.NewBuffer(person))
-	if err != nil {
-		t.Fatalf("%s Error while create request: %v", failed, err)
-	}
-	rr := httptest.NewRecorder()
 	httpHandler := http.HandlerFunc(handleRequest(dbConnection, CreatePerson))
+
+	// check http created status
+	req, rr := createNewRequestNewRecorder("POST", "/person", bytes.NewBuffer(person))
 	httpHandler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusCreated {
 		t.Errorf("%s check StatusCreated is failed: got %d want %d", failed, status, http.StatusCreated)
@@ -44,12 +48,7 @@ func TestCreatePerson(t *testing.T) {
 	}
 
 	// check http bad request status
-	req, err = http.NewRequest("POST", "/person", bytes.NewBuffer([]byte("{'username': 'download'email:'john@gmail.com'}"))) // wrong json body
-	if err != nil {
-		t.Fatalf("%s Error while create request: %v", failed, err)
-	}
-	rr = httptest.NewRecorder()
-	httpHandler = http.HandlerFunc(handleRequest(dbConnection, CreatePerson))
+	req, rr = createNewRequestNewRecorder("POST", "/person", bytes.NewBuffer([]byte("{'username': 'download'email:'john@gmail.com'}"))) // wrong json body
 	httpHandler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf("%s check StatusBadRequest return wrong status code: got %d want %d", failed, status, http.StatusBadRequest)
@@ -67,12 +66,7 @@ func TestCreatePerson(t *testing.T) {
 	people := dbConnection.Collection("people")
 	db.SetIndexes(people, keys)
 
-	req, err = http.NewRequest("POST", "/person", bytes.NewBuffer(person))
-	if err != nil {
-		t.Fatalf("%s Error while create request: %v", failed, err)
-	}
-	rr = httptest.NewRecorder()
-	httpHandler = http.HandlerFunc(handleRequest(dbConnection, CreatePerson))
+	req, rr = createNewRequestNewRecorder("POST", "/person", bytes.NewBuffer(person))
 	httpHandler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusNotAcceptable {
 		t.Errorf("%s check StatusNotAcceptable return wrong status code: got %d want %d", failed, status, http.StatusNotAcceptable)
@@ -84,12 +78,8 @@ func TestCreatePerson(t *testing.T) {
 	// drop database and close connection for raise internal server error
 	dbConnection.Drop(nil)
 	dbConnection.Client().Disconnect(nil)
-	req, err = http.NewRequest("POST", "/person", bytes.NewBuffer(person))
-	if err != nil {
-		t.Fatalf("%s Error while create request: %v", failed, err)
-	}
+	req, _ = http.NewRequest("POST", "/person", bytes.NewBuffer(person))
 	rr = httptest.NewRecorder()
-	httpHandler = http.HandlerFunc(handleRequest(dbConnection, CreatePerson))
 	httpHandler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf("%s check StatusInternalServerError is failed: got %d want %d", failed, status, http.StatusInternalServerError)
