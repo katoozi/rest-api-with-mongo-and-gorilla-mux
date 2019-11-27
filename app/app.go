@@ -22,7 +22,7 @@ type App struct {
 	DB     *mongo.Database
 }
 
-// NewApp will create and initialize App structure. App factory function.
+// ConfigAndRunApp will create and initialize App structure. App factory function.
 func ConfigAndRunApp(config *config.Config) {
 	app := new(App)
 	app.Initialize(config)
