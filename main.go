@@ -10,6 +10,5 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	config := config.NewConfig()
-	app := app.NewApp(config)
-	app.Run(":1234")
+	app.ConfigAndRunApp(config)
 }

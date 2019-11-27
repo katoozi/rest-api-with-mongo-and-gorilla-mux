@@ -18,16 +18,15 @@ import (
 
 // App has the mongo database and router instances
 type App struct {
-	Host   string
 	Router *mux.Router
 	DB     *mongo.Database
 }
 
 // NewApp will create and initialize App structure. App factory function.
-func NewApp(config *config.Config) *App {
+func ConfigAndRunApp(config *config.Config) {
 	app := new(App)
 	app.Initialize(config)
-	return app
+	app.Run(config.ServerHost)
 }
 
 // Initialize initialize the app with
@@ -37,7 +36,6 @@ func (app *App) Initialize(config *config.Config) {
 
 	app.Router = mux.NewRouter()
 	app.UseMiddleware(handler.JSONContentTypeMiddleware)
-	app.Host = config.ServerHost
 	app.setRouters()
 }
 
@@ -98,9 +96,9 @@ func (app *App) Run(host string) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt, os.Kill)
 	go func() {
-		log.Fatal(http.ListenAndServe(app.Host, app.Router))
+		log.Fatal(http.ListenAndServe(host, app.Router))
 	}()
-	log.Printf("Server is listning on http://%s\n", app.Host)
+	log.Printf("Server is listning on http://%s\n", host)
 	sig := <-sigs
 	log.Println("Signal: ", sig)
 
