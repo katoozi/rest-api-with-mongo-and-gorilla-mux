@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  person-service:
+    build: .
+    restart: always
+    env_file: .env
+    networks:
+      - project
+    expose:
+      - "1234"
+
+  mongodb-service:
+    image: "mongo:latest"
+    expose:
+      - "27017"
+    networks:
+      - project
+    volumes:
+      - "mongodb_data:/golang/"
+    env_file: mongo.env
+
+networks:
+  project:
+    external: true
+
+volumes:
+  mongodb_data:
+    driver: local
