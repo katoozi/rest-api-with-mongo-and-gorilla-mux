@@ -1,10 +1,11 @@
 package main
 
-import "github.com/katoozi/golang-mongodb-rest-api/config"
+import (
+	"log"
 
-import "github.com/katoozi/golang-mongodb-rest-api/app"
-
-import "log"
+	"github.com/katoozi/golang-mongodb-rest-api/app"
+	"github.com/katoozi/golang-mongodb-rest-api/config"
+)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)

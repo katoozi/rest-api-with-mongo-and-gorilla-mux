@@ -6,13 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"golang.org/x/net/context"
+
 	"github.com/gorilla/mux"
 	"github.com/katoozi/golang-mongodb-rest-api/app/db"
 	"github.com/katoozi/golang-mongodb-rest-api/app/handler"
 	"github.com/katoozi/golang-mongodb-rest-api/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/x/bsonx"
+	"golang.org/x/net/context"
 )
 
 // App has the mongo database and router instances
